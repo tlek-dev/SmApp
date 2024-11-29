@@ -1,0 +1,15 @@
+{
+  "files": {
+    "main.css": "/SmApp/static/css/main.a244eff0.css",
+    "main.js": "/SmApp/static/js/main.70190166.js",
+    "static/js/453.ef51bab7.chunk.js": "/SmApp/static/js/453.ef51bab7.chunk.js",
+    "index.html": "/SmApp/index.html",
+    "main.a244eff0.css.map": "/SmApp/static/css/main.a244eff0.css.map",
+    "main.70190166.js.map": "/SmApp/static/js/main.70190166.js.map",
+    "453.ef51bab7.chunk.js.map": "/SmApp/static/js/453.ef51bab7.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.a244eff0.css",
+    "static/js/main.70190166.js"
+  ]
+}
