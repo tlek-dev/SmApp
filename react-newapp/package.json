@@ -2,6 +2,7 @@
   "name": "react-newapp",
   "version": "0.1.0",
   "private": true,
+  "homepage": "https://tlekagaidarov.github.io/SmApp",
   "dependencies": {
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
@@ -36,12 +37,12 @@
     "winston": "^3.17.0"
   },
   "scripts": {
-    "start": "concurrently \"npm run server\" \"npm run client\"",
-    "client": "react-scripts start",
-    "server": "nodemon server/server.js",
+    "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build"
   },
   "eslintConfig": {
     "extends": [
@@ -63,6 +64,7 @@
   },
   "devDependencies": {
     "concurrently": "^9.1.0",
+    "gh-pages": "^6.2.0",
     "nodemon": "^3.1.7"
   }
 }

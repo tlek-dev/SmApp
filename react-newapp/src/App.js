@@ -18,6 +18,7 @@ import GamesPage from './components/GamesPage';
 import AdminPanel from './components/admin/AdminPanel';
 import { ShiftProvider } from './context/ShiftContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import '@radix-ui/themes/styles.css';
 import './App.css';
 
@@ -196,42 +197,52 @@ function App() {
   };
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <ShiftProvider>
-        <Theme appearance={darkMode ? 'dark' : 'light'}>
-          <Box style={{ minHeight: '100vh' }}>
-            {/* Header */}
-            <Box style={{ 
-              position: 'sticky',
-              top: 0,
-              zIndex: 10,
-              backgroundColor: 'var(--color-background)',
-              borderBottom: '1px solid var(--gray-5)'
-            }}>
-              <Container size="4">
-                {/* Desktop Navigation */}
-                <Flex className="desktop-nav" justify="between" align="center" py="3">
-                  <Flex gap="2">
-                    {renderNavigationButtons()}
+    <Router basename="/SmApp">
+      <QueryClientProvider client={queryClient}>
+        <ShiftProvider>
+          <Theme appearance={darkMode ? 'dark' : 'light'}>
+            <Box style={{ minHeight: '100vh' }}>
+              {/* Header */}
+              <Box style={{ 
+                position: 'sticky',
+                top: 0,
+                zIndex: 10,
+                backgroundColor: 'var(--color-background)',
+                borderBottom: '1px solid var(--gray-5)'
+              }}>
+                <Container size="4">
+                  {/* Desktop Navigation */}
+                  <Flex className="desktop-nav" justify="between" align="center" py="3">
+                    <Flex gap="2">
+                      {renderNavigationButtons()}
+                    </Flex>
+                    <Flex gap="2" align="center">
+                      <ThemeToggle darkMode={darkMode} setDarkMode={setDarkMode} />
+                    </Flex>
                   </Flex>
-                  <Flex gap="2" align="center">
-                    <ThemeToggle darkMode={darkMode} setDarkMode={setDarkMode} />
-                  </Flex>
-                </Flex>
-              </Container>
-            </Box>
+                </Container>
+              </Box>
 
-            {/* Main Content */}
-            <Box style={{ 
-              position: 'relative',
-              zIndex: 1
-            }}>
-              {renderPage()}
+              {/* Main Content */}
+              <Box style={{ 
+                position: 'relative',
+                zIndex: 1
+              }}>
+                <Routes>
+                  <Route path="/" element={renderPage()} />
+                  <Route path="/schedule" element={<SchedulePage />} />
+                  <Route path="/admin" element={<AdminPanel />} />
+                  <Route path="/games" element={<GamesPage />} />
+                  <Route path="/crypto" element={<CryptoPage />} />
+                  <Route path="/currency" element={<CurrencyPage />} />
+                  <Route path="/commodities" element={<CommoditiesPage />} />
+                </Routes>
+              </Box>
             </Box>
-          </Box>
-        </Theme>
-      </ShiftProvider>
-    </QueryClientProvider>
+          </Theme>
+        </ShiftProvider>
+      </QueryClientProvider>
+    </Router>
   );
 }
 
