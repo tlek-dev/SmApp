@@ -197,7 +197,7 @@ function App() {
   };
 
   return (
-    <Router basename="/SmApp">
+    <Router basename="/react-newapp">
       <QueryClientProvider client={queryClient}>
         <ShiftProvider>
           <Theme appearance={darkMode ? 'dark' : 'light'}>
