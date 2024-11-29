@@ -18,7 +18,7 @@ import GamesPage from './components/GamesPage';
 import AdminPanel from './components/admin/AdminPanel';
 import { ShiftProvider } from './context/ShiftContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route } from 'react-router-dom';
 import '@radix-ui/themes/styles.css';
 import './App.css';
 
@@ -197,7 +197,7 @@ function App() {
   };
 
   return (
-    <Router basename="/react-newapp">
+    <Router>
       <QueryClientProvider client={queryClient}>
         <ShiftProvider>
           <Theme appearance={darkMode ? 'dark' : 'light'}>
