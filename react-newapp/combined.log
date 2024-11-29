@@ -1,0 +1,16 @@
+{"level":"info","message":"Server running at http://localhost:3005","timestamp":"2024-11-29T10:46:19.651Z"}
+{"level":"warn","message":"Failed login attempt for username: admin","timestamp":"2024-11-29T10:57:35.098Z"}
+{"level":"warn","message":"Failed login attempt for username: admin","timestamp":"2024-11-29T10:57:44.833Z"}
+{"level":"warn","message":"Failed login attempt for username: admin","timestamp":"2024-11-29T10:57:58.558Z"}
+{"level":"warn","message":"Failed login attempt for username: admin","timestamp":"2024-11-29T10:58:31.232Z"}
+{"level":"warn","message":"Failed login attempt for username: admin","timestamp":"2024-11-29T10:59:27.314Z"}
+{"level":"info","message":"Server running at http://localhost:3005","timestamp":"2024-11-29T11:00:17.705Z"}
+{"level":"info","message":"Server running at http://localhost:3005","timestamp":"2024-11-29T11:00:35.965Z"}
+{"level":"info","message":"Admin logged in: admin","timestamp":"2024-11-29T11:01:15.732Z"}
+{"level":"info","message":"Score updated by admin: 1","timestamp":"2024-11-29T11:04:23.921Z"}
+{"level":"info","message":"Server running at http://localhost:3005","timestamp":"2024-11-29T11:07:30.088Z"}
+{"level":"info","message":"Server running at http://localhost:3005","timestamp":"2024-11-29T11:09:52.958Z"}
+{"level":"info","message":"Server running at http://localhost:3005","timestamp":"2024-11-29T11:13:46.921Z"}
+{"level":"info","message":"Server running at http://localhost:3005","timestamp":"2024-11-29T11:16:37.264Z"}
+{"level":"info","message":"Score deleted by admin: 1","timestamp":"2024-11-29T11:18:22.924Z"}
+{"level":"info","message":"Admin logged in: admin","timestamp":"2024-11-29T11:21:32.440Z"}

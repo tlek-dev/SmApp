@@ -1,0 +1,55 @@
+/* Общие стили для мобильных устройств */
+@media screen and (max-width: 768px) {
+  html {
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  input, 
+  select, 
+  textarea {
+    font-size: 16px !important; /* Предотвращает автоматическое масштабирование на iOS */
+  }
+
+  /* Улучшение взаимодействия с сенсорным экраном */
+  button, 
+  input, 
+  select {
+    touch-action: manipulation;
+  }
+}
+
+/* Стили для очень маленьких экранов */
+@media screen and (max-width: 380px) {
+  .mobile-stack {
+    flex-direction: column !important;
+    width: 100% !important;
+  }
+
+  .mobile-full-width {
+    width: 100% !important;
+    grid-column: 1 / -1 !important;
+  }
+}
+
+/* Исправление для iOS */
+@supports (-webkit-touch-callout: none) {
+  .ios-height-fix {
+    min-height: -webkit-fill-available;
+  }
+}
+
+/* Улучшение читаемости на темных темах */
+@media (prefers-color-scheme: dark) {
+  body {
+    background-color: var(--gray-1);
+    color: var(--gray-12);
+  }
+}
