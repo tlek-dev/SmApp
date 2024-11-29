@@ -1,56 +1,74 @@
 import React, { useState } from 'react';
-import { Card, Text, Box, Flex, Grid, Badge } from '@radix-ui/themes';
-import { DashboardIcon, ArrowUpIcon, ArrowDownIcon, GlobeIcon } from '@radix-ui/react-icons';
+import { Card, Text, Box, Flex, Grid, Badge, Dialog, Button } from '@radix-ui/themes';
+import { GlobeIcon, ArrowUpIcon, ArrowDownIcon } from '@radix-ui/react-icons';
 import useMarketData from '../../hooks/useMarketData';
-import MarketDataModal from '../common/MarketDataModal';
 
 const CurrencyWidget = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const { data: usdData } = useMarketData('USD');
-  const { data: eurData } = useMarketData('EUR');
-  const { data: rubData } = useMarketData('RUB');
-  const { data: cnyData } = useMarketData('CNY');
+  const [showAll, setShowAll] = useState(false);
 
-  const defaultCurrencies = [
-    { id: 1, symbol: 'USD', name: 'US Dollar', flag: '🇺🇸', rate: 447.50, change: -0.15 },
-    { id: 2, symbol: 'EUR', name: 'Euro', flag: '🇪🇺', rate: 486.20, change: 0.25 },
-    { id: 3, symbol: 'GBP', name: 'British Pound', flag: '🇬🇧', rate: 567.80, change: -0.32 },
-    { id: 4, symbol: 'JPY', name: 'Japanese Yen', flag: '🇯🇵', rate: 3.15, change: 0.18 },
-    { id: 5, symbol: 'CHF', name: 'Swiss Franc', flag: '🇨🇭', rate: 510.45, change: -0.21 },
-    { id: 6, symbol: 'CNY', name: 'Chinese Yuan', flag: '🇨🇳', rate: 69.30, change: 0.12 },
-    { id: 7, symbol: 'AUD', name: 'Australian Dollar', flag: '🇦🇺', rate: 295.60, change: -0.28 },
-    { id: 8, symbol: 'CAD', name: 'Canadian Dollar', flag: '🇨🇦', rate: 332.40, change: 0.15 },
-    { id: 9, symbol: 'SGD', name: 'Singapore Dollar', flag: '🇸🇬', rate: 334.25, change: -0.19 },
-    { id: 10, symbol: 'NZD', name: 'New Zealand Dollar', flag: '🇳🇿', rate: 273.90, change: 0.22 },
-    { id: 11, symbol: 'KRW', name: 'South Korean Won', flag: '🇰🇷', rate: 0.34, change: -0.16 },
-    { id: 12, symbol: 'INR', name: 'Indian Rupee', flag: '🇮🇳', rate: 5.42, change: 0.28 },
-    { id: 13, symbol: 'BRL', name: 'Brazilian Real', flag: '🇧🇷', rate: 91.35, change: -0.24 },
-    { id: 14, symbol: 'ZAR', name: 'South African Rand', flag: '🇿🇦', rate: 23.80, change: 0.17 },
-    { id: 15, symbol: 'AED', name: 'UAE Dirham', flag: '🇦🇪', rate: 121.95, change: -0.11 },
-    { id: 16, symbol: 'SAR', name: 'Saudi Riyal', flag: '🇸🇦', rate: 119.30, change: 0.14 },
-    { id: 17, symbol: 'TRY', name: 'Turkish Lira', flag: '🇹🇷', rate: 15.60, change: -0.35 },
-    { id: 18, symbol: 'SEK', name: 'Swedish Krona', flag: '🇸🇪', rate: 43.25, change: 0.19 },
-    { id: 19, symbol: 'NOK', name: 'Norwegian Krone', flag: '🇳🇴', rate: 42.80, change: -0.22 },
-    { id: 20, symbol: 'MXN', name: 'Mexican Peso', flag: '🇲🇽', rate: 26.15, change: 0.16 }
+  const { data: usdData, loading: usdLoading } = useMarketData('USD');
+  const { data: eurData, loading: eurLoading } = useMarketData('EUR');
+  const { data: rubData, loading: rubLoading } = useMarketData('RUB');
+  const { data: cnyData, loading: cnyLoading } = useMarketData('CNY');
+  const { data: gbpData, loading: gbpLoading } = useMarketData('GBP');
+  const { data: jpyData, loading: jpyLoading } = useMarketData('JPY');
+
+  const allCurrencies = [
+    {
+      id: 1,
+      name: 'US Dollar',
+      symbol: 'USD',
+      flag: '🇺🇸',
+      data: usdData,
+      loading: usdLoading
+    },
+    {
+      id: 2,
+      name: 'Euro',
+      symbol: 'EUR',
+      flag: '🇪🇺',
+      data: eurData,
+      loading: eurLoading
+    },
+    {
+      id: 3,
+      name: 'Russian Ruble',
+      symbol: 'RUB',
+      flag: '🇷🇺',
+      data: rubData,
+      loading: rubLoading
+    },
+    {
+      id: 4,
+      name: 'Chinese Yuan',
+      symbol: 'CNY',
+      flag: '🇨🇳',
+      data: cnyData,
+      loading: cnyLoading
+    },
+    {
+      id: 5,
+      name: 'British Pound',
+      symbol: 'GBP',
+      flag: '🇬🇧',
+      data: gbpData,
+      loading: gbpLoading
+    },
+    {
+      id: 6,
+      name: 'Japanese Yen',
+      symbol: 'JPY',
+      flag: '🇯🇵',
+      data: jpyData,
+      loading: jpyLoading
+    }
   ];
 
-  const currencies = defaultCurrencies.map((currency) => {
-    if (currency.symbol === 'USD') {
-      return { ...currency, rate: usdData?.rate || currency.rate, change: usdData?.change || currency.change };
-    }
-    if (currency.symbol === 'EUR') {
-      return { ...currency, rate: eurData?.rate || currency.rate, change: eurData?.change || currency.change };
-    }
-    if (currency.symbol === 'RUB') {
-      return { ...currency, rate: rubData?.rate || currency.rate, change: rubData?.change || currency.change };
-    }
-    if (currency.symbol === 'CNY') {
-      return { ...currency, rate: cnyData?.rate || currency.rate, change: cnyData?.change || currency.change };
-    }
-    return currency;
-  });
+  const displayedCurrencies = showAll ? allCurrencies : allCurrencies.slice(0, 4);
 
   const formatRate = (rate) => {
+    if (typeof rate !== 'number' || isNaN(rate)) return '0.00';
     return new Intl.NumberFormat('ru-RU', {
       style: 'decimal',
       minimumFractionDigits: 2,
@@ -59,86 +77,131 @@ const CurrencyWidget = () => {
   };
 
   const getBadgeColor = (change) => {
-    return change > 0 ? 'green' : 'red';
+    if (!change || isNaN(change)) return 'gray';
+    return change >= 0 ? 'green' : 'red';
   };
 
   const renderCurrencyItem = (currency) => (
     <Box key={currency.id}>
-      <Card size="1">
-        <Flex direction="column" gap="1">
+      <Card 
+        size="1" 
+        style={{ 
+          height: '80px',
+          padding: '8px',
+          backgroundColor: 'var(--gray-1)',
+          border: '1px solid var(--gray-4)',
+          cursor: 'pointer'
+        }}
+        onClick={() => setIsModalOpen(true)}
+      >
+        <Flex direction="column" gap="1" justify="between" style={{ height: '100%' }}>
           <Flex justify="between" align="center">
             <Flex align="center" gap="1">
               <Text style={{ fontSize: '10px' }}>{currency.flag}</Text>
-              <Text size="1" weight="bold" style={{ fontSize: '10px' }}>{currency.symbol}</Text>
+              <Text size="2" weight="bold">{currency.symbol}</Text>
             </Flex>
-            <GlobeIcon width="10" height="10" />
+            <GlobeIcon width="12" height="12" style={{ color: 'var(--gray-8)' }} />
           </Flex>
 
-          <Text size="2" weight="bold">
-            {formatRate(currency.rate)} ₸
-          </Text>
-
-          <Badge size="1" color={getBadgeColor(currency.change)} style={{ padding: '2px 4px' }}>
-            <Flex align="center" gap="1">
-              {currency.change > 0 ? <ArrowUpIcon width="8" height="8" /> : <ArrowDownIcon width="8" height="8" />}
-              <Text style={{ fontSize: '9px' }}>{Math.abs(currency.change).toFixed(2)}%</Text>
+          {currency.loading ? (
+            <Text size="2" style={{ color: 'var(--gray-9)' }}>Loading...</Text>
+          ) : (
+            <Flex direction="column" gap="1">
+              <Text size="2" weight="bold" style={{ color: 'var(--gray-12)' }}>
+                {formatRate(currency.data?.price)} 
+              </Text>
+              <Badge size="1" color={getBadgeColor(currency.data?.change)} variant="soft">
+                <Flex align="center" gap="1">
+                  {currency.data?.change >= 0 ? <ArrowUpIcon /> : <ArrowDownIcon />}
+                  <Text size="1">{Math.abs(currency.data?.change || 0).toFixed(2)}%</Text>
+                </Flex>
+              </Badge>
             </Flex>
-          </Badge>
+          )}
         </Flex>
       </Card>
-    </Box>
-  );
-
-  const renderModalItem = (currency) => (
-    <Box key={currency.id} mb="3">
-      <Flex justify="between" align="center">
-        <Flex align="center" gap="2">
-          <Text>{currency.flag}</Text>
-          <Text weight="bold">{currency.symbol}</Text>
-          <Text color="gray">{currency.name}</Text>
-        </Flex>
-        <Flex align="center" gap="3">
-          <Text size="3" weight="bold">
-            {formatRate(currency.rate)} ₸
-          </Text>
-          <Badge size="1" color={getBadgeColor(currency.change)}>
-            <Flex align="center" gap="1">
-              {currency.change > 0 ? <ArrowUpIcon /> : <ArrowDownIcon />}
-              {Math.abs(currency.change).toFixed(2)}%
-            </Flex>
-          </Badge>
-        </Flex>
-      </Flex>
-      <Box mt="2" style={{ borderBottom: '1px solid var(--gray-5)' }} />
     </Box>
   );
 
   return (
     <>
-      <Card size="2" onClick={() => setIsModalOpen(true)} style={{ cursor: 'pointer' }}>
+      <Card 
+        size="2" 
+        style={{ 
+          width: '100%',
+          backgroundColor: 'var(--color-page-background)',
+          border: '1px solid var(--gray-4)'
+        }}
+      >
         <Flex direction="column" gap="3">
-          <Flex justify="between" align="center" mb="1">
-            <Flex align="center" gap="1">
-              <DashboardIcon width="12" height="12" />
-              <Text size="1" weight="bold">Курсы валют</Text>
+          <Flex justify="between" align="center">
+            <Flex align="center" gap="2">
+              <GlobeIcon width="16" height="16" />
+              <Text size="2" weight="bold">Currency Market</Text>
             </Flex>
+            <Text 
+              size="2"
+              style={{ cursor: 'pointer', color: 'var(--accent-9)' }} 
+              onClick={() => setShowAll(!showAll)}
+            >
+              {showAll ? 'Show Less' : 'Show More'}
+            </Text>
           </Flex>
 
-          <Grid columns="2" gap="1">
-            {currencies.slice(0, 4).map(renderCurrencyItem)}
+          <Grid columns="2" gap="2" width="auto">
+            {displayedCurrencies.map(renderCurrencyItem)}
           </Grid>
         </Flex>
       </Card>
 
-      <MarketDataModal
-        open={isModalOpen}
-        onOpenChange={setIsModalOpen}
-        title="Все курсы валют"
-      >
-        <Box>
-          {currencies.map(renderModalItem)}
-        </Box>
-      </MarketDataModal>
+      <Dialog.Root open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <Dialog.Content style={{ maxWidth: 450 }}>
+          <Dialog.Title>Currency Market</Dialog.Title>
+          
+          <Flex direction="column" gap="3" style={{ marginTop: 20 }}>
+            {allCurrencies.map((currency) => (
+              <Box key={currency.id}>
+                <Flex justify="between" align="center" style={{ padding: '8px 0' }}>
+                  <Flex align="center" gap="2">
+                    <Text>{currency.flag}</Text>
+                    <Box>
+                      <Text weight="bold">{currency.symbol}</Text>
+                      <Text color="gray" size="2">{currency.name}</Text>
+                    </Box>
+                  </Flex>
+                  
+                  <Flex direction="column" align="end" gap="1">
+                    {currency.loading ? (
+                      <Text size="2">Loading...</Text>
+                    ) : (
+                      <>
+                        <Text size="2" weight="bold">
+                          {formatRate(currency.data?.price)} 
+                        </Text>
+                        <Badge size="1" color={getBadgeColor(currency.data?.change)} variant="soft">
+                          <Flex align="center" gap="1">
+                            {currency.data?.change >= 0 ? <ArrowUpIcon /> : <ArrowDownIcon />}
+                            <Text size="1">{Math.abs(currency.data?.change || 0).toFixed(2)}%</Text>
+                          </Flex>
+                        </Badge>
+                      </>
+                    )}
+                  </Flex>
+                </Flex>
+                <Box style={{ borderBottom: '1px solid var(--gray-4)' }} />
+              </Box>
+            ))}
+          </Flex>
+
+          <Flex gap="3" mt="4" justify="end">
+            <Dialog.Close>
+              <Button variant="soft" color="gray">
+                Close
+              </Button>
+            </Dialog.Close>
+          </Flex>
+        </Dialog.Content>
+      </Dialog.Root>
     </>
   );
 };

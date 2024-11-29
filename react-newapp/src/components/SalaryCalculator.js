@@ -10,6 +10,17 @@ const SalaryCalculator = () => {
   const [holidayPay, setHolidayPay] = useState(0);
   const [netSalary, setNetSalary] = useState(0);
   const { monthStats } = useShiftContext();
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
 
   useEffect(() => {
     const rate = hourlyRate === '' ? 0 : Number(hourlyRate);
@@ -41,7 +52,7 @@ const SalaryCalculator = () => {
   const StatBox = ({ label, value, highlight, size = "4" }) => (
     <Box 
       style={{ 
-        padding: '12px',
+        padding: isMobile ? '8px' : '12px',
         borderRadius: 'var(--radius-3)',
         backgroundColor: highlight ? 'var(--accent-3)' : 'var(--gray-3)',
         border: `1px solid ${highlight ? 'var(--accent-6)' : 'var(--gray-5)'}`,
@@ -51,15 +62,15 @@ const SalaryCalculator = () => {
         justifyContent: 'space-between'
       }}
     >
-      <Text size="1" style={{ color: highlight ? 'var(--accent-11)' : 'var(--gray-11)' }}>
+      <Text size={isMobile ? "1" : "2"} style={{ color: highlight ? 'var(--accent-11)' : 'var(--gray-11)' }}>
         {label}
       </Text>
       <Text 
-        size={size}
+        size={isMobile ? String(Number(size) - 1) : size}
         weight="bold"
         style={{ 
           color: highlight ? 'var(--accent-9)' : 'var(--gray-12)',
-          marginTop: '4px',
+          marginTop: isMobile ? '2px' : '4px',
           wordBreak: 'break-word'
         }}
       >
@@ -70,30 +81,30 @@ const SalaryCalculator = () => {
 
   const DeductionBox = ({ label, amount }) => (
     <Box style={{ 
-      padding: '8px',
+      padding: isMobile ? '6px' : '8px',
       backgroundColor: 'var(--gray-3)',
       borderRadius: 'var(--radius-2)',
       border: '1px solid var(--gray-5)'
     }}>
-      <Text size="1" style={{ color: 'var(--gray-11)' }}>{label}</Text>
-      <Text size="2" weight="bold" style={{ color: 'var(--gray-12)', marginTop: '2px' }}>
+      <Text size="1" style={{ color: 'var(--gray-11)', fontSize: isMobile ? '11px' : '12px' }}>{label}</Text>
+      <Text size={isMobile ? "1" : "2"} weight="bold" style={{ color: 'var(--gray-12)', marginTop: '2px' }}>
         {formatCurrency(amount)}
       </Text>
     </Box>
   );
 
   return (
-    <Card size="2" style={{ height: '100%' }}>
-      <Flex direction="column" gap="3">
-        <Flex align="center" gap="2" style={{ borderBottom: '1px solid var(--gray-5)', paddingBottom: '8px' }}>
-          <ClockIcon width="16" height="16" style={{ color: 'var(--accent-9)' }} />
-          <Text size="2" weight="bold" style={{ color: 'var(--gray-12)' }}>
+    <Card size="2" style={{ height: '100%', padding: isMobile ? '12px' : '16px' }}>
+      <Flex direction="column" gap={isMobile ? "2" : "3"}>
+        <Flex align="center" gap="2" style={{ borderBottom: '1px solid var(--gray-5)', paddingBottom: isMobile ? '6px' : '8px' }}>
+          <ClockIcon width={isMobile ? "14" : "16"} height={isMobile ? "14" : "16"} style={{ color: 'var(--accent-9)' }} />
+          <Text size={isMobile ? "1" : "2"} weight="bold" style={{ color: 'var(--gray-12)' }}>
             Расчет по графику
           </Text>
         </Flex>
 
         <Box>
-          <Text as="label" size="1" weight="bold" style={{ color: 'var(--gray-11)', display: 'block', marginBottom: '4px' }}>
+          <Text as="label" size="1" weight="bold" style={{ color: 'var(--gray-11)', display: 'block', marginBottom: isMobile ? '2px' : '4px' }}>
             Почасовая ставка (тенге)
           </Text>
           <input
@@ -103,10 +114,10 @@ const SalaryCalculator = () => {
             placeholder="Введите ставку"
             style={{
               width: '100%',
-              padding: '8px',
+              padding: isMobile ? '6px' : '8px',
               border: '1px solid var(--gray-6)',
               borderRadius: 'var(--radius-2)',
-              fontSize: '14px',
+              fontSize: isMobile ? '13px' : '14px',
               backgroundColor: 'var(--gray-2)',
               color: 'var(--gray-12)',
               transition: 'all 0.2s ease',
@@ -119,22 +130,22 @@ const SalaryCalculator = () => {
           />
         </Box>
 
-        <Grid columns="2" gap="3">
+        <Grid columns={isMobile ? "1" : "2"} gap={isMobile ? "2" : "3"}>
           <StatBox 
             label="Обычные часы" 
             value={monthStats.regularHours || 0}
-            size="3"
+            size={isMobile ? "2" : "3"}
           />
           <StatBox 
             label="Праздничные часы" 
             value={monthStats.holidayHours || 0}
-            size="3"
+            size={isMobile ? "2" : "3"}
           />
         </Grid>
 
-        <Separator size="4" />
+        <Separator size={isMobile ? "2" : "4"} />
 
-        <Grid columns="2" gap="3">
+        <Grid columns={isMobile ? "1" : "2"} gap={isMobile ? "2" : "3"}>
           <StatBox 
             label="Обычная оплата" 
             value={formatCurrency(regularPay)} 
@@ -146,18 +157,18 @@ const SalaryCalculator = () => {
         </Grid>
 
         <Box>
-          <Flex align="center" gap="2" style={{ marginBottom: '4px' }}>
-            <MinusIcon width="14" height="14" />
+          <Flex align="center" gap="2" style={{ marginBottom: isMobile ? '2px' : '4px' }}>
+            <MinusIcon width={isMobile ? "12" : "14"} height={isMobile ? "12" : "14"} />
             <Text size="1" weight="bold" style={{ color: 'var(--gray-11)' }}>Удержания</Text>
           </Flex>
-          <Grid columns="3" gap="2">
+          <Grid columns={isMobile ? "1" : "3"} gap="2">
             <DeductionBox label="Пенсионный (10%)" amount={grossSalary * 0.10} />
             <DeductionBox label="Налог (10%)" amount={grossSalary * 0.10} />
             <DeductionBox label="Профсоюз (1%)" amount={grossSalary * 0.01} />
           </Grid>
         </Box>
 
-        <Grid columns="2" gap="3">
+        <Grid columns={isMobile ? "1" : "2"} gap={isMobile ? "2" : "3"}>
           <StatBox 
             label="Общий доход" 
             value={formatCurrency(grossSalary)} 

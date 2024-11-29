@@ -10,12 +10,8 @@ import {
   DashboardIcon
 } from '@radix-ui/react-icons';
 import MainPage from './components/MainPage';
-import CryptoPage from './components/CryptoPage';
-import CurrencyPage from './components/CurrencyPage';
 import SchedulePage from './components/SchedulePage';
-import CommoditiesPage from './components/CommoditiesPage';
 import GamesPage from './components/GamesPage';
-import AdminPanel from './components/admin/AdminPanel';
 import { ShiftProvider } from './context/ShiftContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { HashRouter as Router, Routes, Route } from 'react-router-dom';
@@ -136,42 +132,6 @@ function App() {
         }}
         isMobile={false}
       />
-      <NavButton
-        icon={<DashboardIcon />}
-        text="Admin Panel"
-        isActive={currentPage === 'admin'}
-        onClick={() => {
-          setCurrentPage('admin');
-        }}
-        isMobile={false}
-      />
-      <NavButton
-        icon={<DashboardIcon />}
-        text="Crypto"
-        isActive={currentPage === 'crypto'}
-        onClick={() => {
-          setCurrentPage('crypto');
-        }}
-        isMobile={false}
-      />
-      <NavButton
-        icon={<DashboardIcon />}
-        text="Currency"
-        isActive={currentPage === 'currency'}
-        onClick={() => {
-          setCurrentPage('currency');
-        }}
-        isMobile={false}
-      />
-      <NavButton
-        icon={<DashboardIcon />}
-        text="Commodities"
-        isActive={currentPage === 'commodities'}
-        onClick={() => {
-          setCurrentPage('commodities');
-        }}
-        isMobile={false}
-      />
     </>
   );
 
@@ -179,18 +139,10 @@ function App() {
     switch (currentPage) {
       case 'main':
         return <MainPage />;
-      case 'crypto':
-        return <CryptoPage />;
-      case 'currency':
-        return <CurrencyPage />;
       case 'schedule':
         return <SchedulePage />;
-      case 'commodities':
-        return <CommoditiesPage />;
       case 'games':
         return <GamesPage />;
-      case 'admin':
-        return <AdminPanel />;
       default:
         return <MainPage />;
     }
@@ -231,11 +183,7 @@ function App() {
                 <Routes>
                   <Route path="/" element={renderPage()} />
                   <Route path="/schedule" element={<SchedulePage />} />
-                  <Route path="/admin" element={<AdminPanel />} />
                   <Route path="/games" element={<GamesPage />} />
-                  <Route path="/crypto" element={<CryptoPage />} />
-                  <Route path="/currency" element={<CurrencyPage />} />
-                  <Route path="/commodities" element={<CommoditiesPage />} />
                 </Routes>
               </Box>
             </Box>
