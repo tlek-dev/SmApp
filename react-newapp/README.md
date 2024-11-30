@@ -1,70 +1,89 @@
-# Getting Started with Create React App
+# SmApp - Smart Market Data Dashboard
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A modern React-based web application for tracking cryptocurrency and currency exchange rates in real-time.
 
-## Available Scripts
+## Features
 
-In the project directory, you can run:
+### Cryptocurrency Widget
+- Real-time tracking of major cryptocurrencies (BTC, ETH, TON, SOL, ADA, LINK)
+- 24-hour price change indicators
+- Detailed modal view for each cryptocurrency
+- Auto-refresh every 60 seconds
+- Responsive grid layout
 
-### `npm start`
+### Currency Exchange Widget
+- Live exchange rates for major currencies (USD, EUR, RUB, CNY, GBP, JPY)
+- All rates shown relative to KZT (Kazakhstani Tenge)
+- Currency flags and symbols
+- Auto-refresh functionality
+- Responsive design
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## Technical Stack
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+- **Frontend Framework**: React
+- **UI Components**: Radix UI Themes
+- **Icons**: Radix UI Icons
+- **API Integrations**:
+  - CoinGecko API for cryptocurrency data
+  - Exchange Rates API for currency conversion
+- **State Management**: React Hooks (useState, useEffect)
+- **Custom Hooks**: useMarketData for unified data fetching
 
-### `npm test`
+## Installation
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+1. Clone the repository:
+```bash
+git clone [repository-url]
+cd react-newapp
+```
 
-### `npm run build`
+2. Install dependencies:
+```bash
+npm install
+```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+3. Start the development server:
+```bash
+npm start
+```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## Configuration
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+The application uses the following APIs:
+- CoinGecko API (no API key required)
+- Exchange Rates API (no API key required)
 
-### `npm run eject`
+## Usage
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+The dashboard automatically fetches and displays:
+- Current cryptocurrency prices in USD
+- 24-hour price changes for cryptocurrencies
+- Current exchange rates for major currencies relative to KZT
+- All data is automatically refreshed every 60 seconds
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## Customization
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+You can customize the tracked cryptocurrencies and currencies by modifying:
+- `COIN_IDS` in useMarketData.js for cryptocurrencies
+- `CURRENCY_SYMBOLS` in useMarketData.js for currencies
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+## Responsive Design
 
-## Learn More
+The application is fully responsive and works on:
+- Desktop computers
+- Tablets
+- Mobile devices
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+## Data Refresh
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+- All market data automatically refreshes every 60 seconds
+- Manual refresh available through the UI
+- Graceful error handling for API failures
 
-### Code Splitting
+## Contributing
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-### Analyzing the Bundle Size
+## License
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+This project is licensed under the MIT License - see the LICENSE file for details.

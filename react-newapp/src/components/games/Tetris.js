@@ -9,13 +9,13 @@ const GRID = 20;
 
 // Цвета для фигур
 const COLORS = {
-  'I': '#00f0f0',
-  'O': '#f0f000',
-  'T': '#a000f0',
-  'S': '#00f000',
-  'Z': '#f00000',
-  'J': '#0000f0',
-  'L': '#f0a000'
+  'I': '#00f0f0', // Голубой
+  'O': '#f0f000', // Желтый
+  'T': '#a000f0', // Фиолетовый
+  'S': '#00f000', // Зеленый
+  'Z': '#f00000', // Красный
+  'J': '#0000f0', // Синий
+  'L': '#f0a000'  // Оранжевый
 };
 
 // Фигуры Тетриса
@@ -62,9 +62,7 @@ const Tetris = () => {
   const [score, setScore] = useState(0);
   const [isPaused, setIsPaused] = useState(true);
   const [gameOver, setGameOver] = useState(false);
-  const [showNicknameDialog, setShowNicknameDialog] = useState(false);
-  const [nickname, setNickname] = useState('');
-  const [error, setError] = useState(null);
+  const [gameStarted, setGameStarted] = useState(false);
   const requestRef = useRef(null);
   const dropCounter = useRef(0);
   const dropInterval = useRef(1000);
@@ -77,6 +75,7 @@ const Tetris = () => {
   const piece = useRef({
     pos: { x: 0, y: 0 },
     matrix: null,
+    color: null
   });
   
   const arena = useRef(createMatrix(12, 20));
@@ -90,7 +89,11 @@ const Tetris = () => {
   }
 
   function createPiece(type) {
-    return SHAPES[type];
+    return {
+      matrix: SHAPES[type],
+      color: type,
+      pos: { x: 0, y: 0 }
+    };
   }
 
   function collide(arena, player) {
@@ -111,7 +114,7 @@ const Tetris = () => {
     player.matrix.forEach((row, y) => {
       row.forEach((value, x) => {
         if (value !== 0) {
-          arena[y + player.pos.y][x + player.pos.x] = value;
+          arena[y + player.pos.y][x + player.pos.x] = player.color;
         }
       });
     });
@@ -151,14 +154,20 @@ const Tetris = () => {
     const pos = piece.current.pos.x;
     let offset = 1;
     const matrix = rotate(piece.current.matrix);
-    piece.current.matrix = matrix;
+    piece.current = {
+      ...piece.current,
+      matrix
+    };
     
     while (collide(arena.current, piece.current)) {
       piece.current.pos.x += offset;
       offset = -(offset + (offset > 0 ? 1 : -1));
       if (offset > piece.current.matrix[0].length) {
-        piece.current.matrix = matrix;
-        piece.current.pos.x = pos;
+        piece.current = {
+          ...piece.current,
+          matrix: rotate(matrix),
+          pos: { ...piece.current.pos, x: pos }
+        };
         return;
       }
     }
@@ -167,14 +176,11 @@ const Tetris = () => {
   function playerReset() {
     const pieces = 'ILJOTSZ';
     const type = pieces[Math.floor(Math.random() * pieces.length)];
-    piece.current = {
-      pos: { x: 0, y: 0 },
-      matrix: createPiece(type),
-    };
+    piece.current = createPiece(type);
     
     // Центрируем фигуру по горизонтали
     piece.current.pos.x = Math.floor(arena.current[0].length / 2) - 
-                         Math.floor(piece.current.matrix[0].length / 2);
+                         Math.floor(piece.current.matrix.length / 2);
     piece.current.pos.y = 0;
 
     // Проверяем столкновение
@@ -199,31 +205,54 @@ const Tetris = () => {
     }
   }
 
+  function handleGameOver() {
+    setGameOver(true);
+    setIsPaused(true);
+    cancelAnimationFrame(requestRef.current);
+  }
+
+  function handleRestart() {
+    setGameStarted(false);
+    setIsPaused(false);
+    setGameOver(false);
+    arena.current = createMatrix(12, 20);
+    setScore(0);
+    dropCounter.current = 0;
+    lastTime.current = 0;
+    playerReset();
+    draw();
+  }
+
   function startGame() {
-    if (nickname) {
-      setShowNicknameDialog(false);
-      setIsPaused(false);
-      setGameOver(false);
-      
-      // Очищаем арену
-      arena.current = createMatrix(12, 20);
-      
-      // Сбрасываем счет и счетчики
-      setScore(0);
-      dropCounter.current = 0;
-      lastTime.current = 0;
-      
-      // Создаем первую фигуру
-      playerReset();
-      
-      // Запускаем игровой цикл
-      draw();
-      update();
+    setGameStarted(true);
+    setIsPaused(false);
+    setGameOver(false);
+    arena.current = createMatrix(12, 20);
+    setScore(0);
+    dropCounter.current = 0;
+    lastTime.current = 0;
+    playerReset();
+    draw();
+    update();
+  }
+
+  function pauseGame() {
+    if (!gameOver && gameStarted) {
+      if (isPaused) {
+        // Возобновляем игру
+        setIsPaused(false);
+        lastTime.current = 0;
+        requestRef.current = requestAnimationFrame(update);
+      } else {
+        // Ставим на паузу
+        setIsPaused(true);
+        cancelAnimationFrame(requestRef.current);
+      }
     }
-  };
+  }
 
   function update(time = 0) {
-    if (!isPaused && !gameOver) {
+    if (!isPaused && !gameOver && gameStarted) {
       const deltaTime = time - lastTime.current;
       lastTime.current = time;
       dropCounter.current += deltaTime;
@@ -238,15 +267,46 @@ const Tetris = () => {
     }
   };
 
-  const draw = () => {
-    if (!canvasRef.current || !ctx.current) return;
-    
-    // Очищаем канвас
+  function drawMatrix(matrix, offset, color) {
+    matrix.forEach((row, y) => {
+      row.forEach((value, x) => {
+        if (value !== 0) {
+          ctx.current.fillStyle = COLORS[color];
+          ctx.current.fillRect(
+            (x + offset.x) * GRID,
+            (y + offset.y) * GRID,
+            GRID - 1,
+            GRID - 1
+          );
+          
+          // Добавляем эффект блеска
+          ctx.current.fillStyle = 'rgba(255, 255, 255, 0.1)';
+          ctx.current.fillRect(
+            (x + offset.x) * GRID,
+            (y + offset.y) * GRID,
+            GRID - 1,
+            GRID / 2
+          );
+          
+          // Добавляем тень
+          ctx.current.fillStyle = 'rgba(0, 0, 0, 0.1)';
+          ctx.current.fillRect(
+            (x + offset.x) * GRID,
+            (y + offset.y) * GRID + GRID / 2,
+            GRID - 1,
+            GRID / 2
+          );
+        }
+      });
+    });
+  }
+
+  function draw() {
     ctx.current.fillStyle = '#000';
     ctx.current.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
     // Рисуем сетку
-    ctx.current.strokeStyle = '#333';
+    ctx.current.strokeStyle = 'rgba(255, 255, 255, 0.05)';
     for (let i = 0; i < CANVAS_WIDTH; i += GRID) {
       ctx.current.beginPath();
       ctx.current.moveTo(i, 0);
@@ -260,30 +320,42 @@ const Tetris = () => {
       ctx.current.stroke();
     }
 
-    // Рисуем арену и текущую фигуру
-    drawMatrix(arena.current, { x: 0, y: 0 });
-    if (piece.current.matrix) {
-      drawMatrix(piece.current.matrix, piece.current.pos);
-    }
-  };
-
-  const drawMatrix = (matrix, offset) => {
-    if (!ctx.current) return;
-    
-    matrix.forEach((row, y) => {
+    // Рисуем арену
+    arena.current.forEach((row, y) => {
       row.forEach((value, x) => {
         if (value !== 0) {
-          ctx.current.fillStyle = COLORS[value] || '#fff';
+          ctx.current.fillStyle = COLORS[value];
           ctx.current.fillRect(
-            (x + offset.x) * GRID,
-            (y + offset.y) * GRID,
+            x * GRID,
+            y * GRID,
             GRID - 1,
             GRID - 1
+          );
+          
+          // Добавляем эффект блеска
+          ctx.current.fillStyle = 'rgba(255, 255, 255, 0.1)';
+          ctx.current.fillRect(
+            x * GRID,
+            y * GRID,
+            GRID - 1,
+            GRID / 2
+          );
+          
+          // Добавляем тень
+          ctx.current.fillStyle = 'rgba(0, 0, 0, 0.1)';
+          ctx.current.fillRect(
+            x * GRID,
+            y * GRID + GRID / 2,
+            GRID - 1,
+            GRID / 2
           );
         }
       });
     });
-  };
+
+    // Рисуем текущую фигуру
+    drawMatrix(piece.current.matrix, piece.current.pos, piece.current.color);
+  }
 
   const handleTouchStart = (e) => {
     if (isPaused || gameOver) return;
@@ -345,277 +417,226 @@ const Tetris = () => {
     draw();
   };
 
-  const loadHighScores = async () => {
-    try {
-      const response = await fetch('http://localhost:3005/api/scores');
-      if (!response.ok) {
-        throw new Error('Failed to fetch scores');
-      }
-      const scores = await response.json();
-      // Removed setHighScores(scores);
-    } catch (err) {
-      console.error('Error loading scores:', err);
-      setError('Failed to load high scores');
-    }
-  };
-
-  const saveScore = async () => {
-    try {
-      const response = await fetch('http://localhost:3005/api/scores', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          nickname,
-          score,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to save score');
-      }
-    } catch (err) {
-      console.error('Error saving score:', err);
-      setError('Failed to save score');
-    }
-  };
-
-  const handleGameOver = () => {
-    setGameOver(true);
-    setIsPaused(true);
-    if (nickname && score > 0) {
-      saveScore();
-    }
-  };
-
-  const resetGame = () => {
-    // Очищаем арену
-    arena.current = createMatrix(12, 20);
-    
-    // Сбрасываем состояние игры
-    setScore(0);
-    setGameOver(false);
-    setIsPaused(true);
-    
-    // Сбрасываем счетчики
-    dropCounter.current = 0;
-    lastTime.current = 0;
-    
-    // Создаем новую фигуру
-    playerReset();
-    
-    // Перерисовываем игру
-    draw();
-  };
-
-  useEffect(() => {
-    // Removed loadHighScores();
-  }, []);
-
   useEffect(() => {
     if (!canvasRef.current) return;
 
     ctx.current = canvasRef.current.getContext('2d');
-    canvasRef.current.width = CANVAS_WIDTH;
-    canvasRef.current.height = CANVAS_HEIGHT;
-
-    // Добавляем обработчики touch событий
-    const canvas = canvasRef.current;
-    canvas.addEventListener('touchstart', handleTouchStart);
-    canvas.addEventListener('touchmove', handleTouchMove);
-    canvas.addEventListener('touchend', handleTouchEnd);
-
+    
+    // Инициализируем первую фигуру
     playerReset();
     draw();
 
     const handleKeyDown = (e) => {
-      if (isPaused || gameOver) return;
+      if (gameOver || !gameStarted) return;
 
-      switch(e.keyCode) {
-        case 37: // Left
-          playerMove(-1);
-          break;
-        case 39: // Right
-          playerMove(1);
-          break;
-        case 40: // Down
-          playerDrop();
-          break;
-        case 38: // Up
-          playerRotate();
-          break;
-        case 32: // Space
-          while (!collide(arena.current, piece.current)) {
-            piece.current.pos.y++;
-          }
-          piece.current.pos.y--;
-          merge(arena.current, piece.current);
-          playerReset();
-          arenaSweep();
-          dropCounter.current = 0;
-          break;
+      if (e.key === ' ') {
+        pauseGame();
+        return;
       }
-      draw();
+
+      if (isPaused) return;
+
+      if (e.key === 'ArrowLeft') {
+        playerMove(-1);
+      } else if (e.key === 'ArrowRight') {
+        playerMove(1);
+      } else if (e.key === 'ArrowDown') {
+        playerDrop();
+      } else if (e.key === 'ArrowUp') {
+        playerRotate();
+      }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
-      canvas.removeEventListener('touchstart', handleTouchStart);
-      canvas.removeEventListener('touchmove', handleTouchMove);
-      canvas.removeEventListener('touchend', handleTouchEnd);
       cancelAnimationFrame(requestRef.current);
     };
-  }, [isPaused, gameOver]);
+  }, [gameOver, isPaused, gameStarted]);
 
   useEffect(() => {
-    if (!isPaused && !gameOver) {
+    if (!isPaused && !gameOver && gameStarted) {
       requestRef.current = requestAnimationFrame(update);
     }
     return () => cancelAnimationFrame(requestRef.current);
-  }, [isPaused, gameOver]);
+  }, [isPaused, gameOver, gameStarted]);
 
   return (
-    <Card>
-      <Flex direction="column" gap="4" align="center" p="4">
-        <Text size="5" weight="bold">Тетрис</Text>
-        <Flex gap="4" align="center">
-          <Text size="4" weight="medium">Счет: {score}</Text>
-          <Button 
-            onClick={() => {
-              if (!gameOver) {
-                if (isPaused) {
-                  setShowNicknameDialog(true);
-                } else {
-                  setIsPaused(true);
-                }
-              }
-            }}
-            disabled={gameOver}
-            variant="soft"
-          >
-            {isPaused ? <PlayIcon width="16" height="16" /> : <PauseIcon width="16" height="16" />}
-          </Button>
-          <Button onClick={resetGame} variant="soft">
-            <ResetIcon width="16" height="16" />
-          </Button>
+    <Card style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
+      <Flex direction="column" gap="3">
+        <Flex justify="between" align="center">
+          <Text size="6">🎮 Тетрис</Text>
+          <Text size="6">Счет: {score}</Text>
         </Flex>
 
-        <Dialog.Root open={showNicknameDialog} onOpenChange={setShowNicknameDialog}>
-          <Dialog.Content style={{ maxWidth: 450 }}>
-            <Dialog.Title>Введите ваш никнейм</Dialog.Title>
-            <Dialog.Description size="2" mb="4">
-              Ваш никнейм будет использован для сохранения рекордов.
-            </Dialog.Description>
+        <Flex gap="5" align="start">
+          {/* Игровое поле */}
+          <Box style={{ position: 'relative', flex: '1' }}>
+            <canvas
+              ref={canvasRef}
+              width={CANVAS_WIDTH}
+              height={CANVAS_HEIGHT}
+              style={{
+                border: '2px solid var(--gray-5)',
+                backgroundColor: 'var(--gray-1)',
+                borderRadius: '8px'
+              }}
+            />
+            
+            {gameOver && (
+              <Flex
+                direction="column"
+                align="center"
+                justify="center"
+                gap="3"
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                  borderRadius: '8px',
+                  color: 'white'
+                }}
+              >
+                <Text size="6" style={{ color: 'white' }}>Игра окончена!</Text>
+                <Text size="4" style={{ color: 'white' }}>Счет: {score}</Text>
+                <Button onClick={handleRestart}>
+                  <ResetIcon /> Начать заново
+                </Button>
+              </Flex>
+            )}
+          </Box>
 
-            <Flex direction="column" gap="3">
-              <TextArea 
-                placeholder="Введите никнейм"
-                value={nickname}
-                onChange={(e) => setNickname(e.target.value)}
-                style={{ height: '40px' }}
-              />
+          {/* Джойстик и управление */}
+          <Flex direction="column" gap="4" style={{ minWidth: '180px' }}>
+            {/* Кнопки управления игрой */}
+            <Flex gap="2" justify="between" wrap="wrap">
+              <Button 
+                onClick={startGame}
+                disabled={gameStarted && !gameOver}
+                style={{
+                  width: '80px',
+                  height: '40px',
+                  background: 'var(--green-9)'
+                }}
+              >
+                <PlayIcon />
+                {gameOver ? 'Новая' : 'Старт'}
+              </Button>
+              <Button 
+                onClick={pauseGame}
+                disabled={!gameStarted || gameOver}
+                style={{
+                  width: '80px',
+                  height: '40px',
+                  background: isPaused ? 'var(--indigo-9)' : 'var(--violet-9)',
+                  color: 'white',
+                  fontWeight: 'bold',
+                  opacity: (!gameStarted || gameOver) ? 0.5 : 1
+                }}
+              >
+                {isPaused ? <PlayIcon /> : <PauseIcon />}
+                {isPaused ? 'Играть' : 'Пауза'}
+              </Button>
+              <Button 
+                onClick={handleRestart}
+                style={{
+                  width: '80px',
+                  height: '40px',
+                  background: 'var(--red-9)',
+                  marginTop: '8px'
+                }}
+              >
+                <ResetIcon /> Сброс
+              </Button>
             </Flex>
 
-            <Flex gap="3" mt="4" justify="end">
-              <Dialog.Close>
-                <Button variant="soft" color="gray">
-                  Отмена
+            {/* Джойстик */}
+            <Card style={{ 
+              padding: '10px',
+              background: 'var(--gray-3)',
+              borderRadius: '12px',
+              opacity: !gameStarted || isPaused || gameOver ? 0.5 : 1,
+              pointerEvents: !gameStarted || isPaused || gameOver ? 'none' : 'auto'
+            }}>
+              {/* Верхняя кнопка (поворот) */}
+              <Flex justify="center" mb="2">
+                <Button 
+                  onClick={playerRotate}
+                  disabled={gameOver || isPaused || !gameStarted}
+                  style={{
+                    width: '60px',
+                    height: '60px',
+                    borderRadius: '50%',
+                    background: 'var(--blue-9)'
+                  }}
+                >
+                  <ChevronUpIcon width="24" height="24" />
                 </Button>
-              </Dialog.Close>
-              <Dialog.Close>
-                <Button onClick={startGame} disabled={!nickname}>
-                  Начать игру
-                </Button>
-              </Dialog.Close>
-            </Flex>
-          </Dialog.Content>
-        </Dialog.Root>
+              </Flex>
 
-        <Box 
-          style={{ 
-            border: '2px solid var(--gray-6)', 
-            borderRadius: 'var(--radius-3)',
-            background: '#000',
-            padding: '2px',
-            touchAction: 'none'
-          }}
-        >
-          <canvas ref={canvasRef} />
-        </Box>
-        
-        {/* Touch Controls */}
-        <Flex direction="column" gap="2" align="center" style={{ marginTop: '16px' }}>
-          <Button 
-            size="3" 
-            onClick={() => !isPaused && !gameOver && playerRotate()} 
-            variant="soft"
-            style={{ width: '60px', height: '60px' }}
-          >
-            <ChevronUpIcon width="24" height="24" />
-          </Button>
-          <Flex gap="2" align="center">
-            <Button 
-              size="3" 
-              onClick={() => !isPaused && !gameOver && playerMove(-1)} 
-              variant="soft"
-              style={{ width: '60px', height: '60px' }}
-            >
-              <ChevronLeftIcon width="24" height="24" />
-            </Button>
-            <Button 
-              size="3" 
-              onClick={() => !isPaused && !gameOver && playerDrop()} 
-              variant="soft"
-              style={{ width: '60px', height: '60px' }}
-            >
-              <ChevronDownIcon width="24" height="24" />
-            </Button>
-            <Button 
-              size="3" 
-              onClick={() => !isPaused && !gameOver && playerMove(1)} 
-              variant="soft"
-              style={{ width: '60px', height: '60px' }}
-            >
-              <ChevronRightIcon width="24" height="24" />
-            </Button>
+              {/* Средний ряд (влево-вправо) */}
+              <Flex justify="between" align="center" mb="2">
+                <Button 
+                  onClick={() => playerMove(-1)}
+                  disabled={gameOver || isPaused || !gameStarted}
+                  style={{
+                    width: '60px',
+                    height: '60px',
+                    borderRadius: '50%',
+                    background: 'var(--blue-9)'
+                  }}
+                >
+                  <ChevronLeftIcon width="24" height="24" />
+                </Button>
+                <Button 
+                  onClick={() => playerMove(1)}
+                  disabled={gameOver || isPaused || !gameStarted}
+                  style={{
+                    width: '60px',
+                    height: '60px',
+                    borderRadius: '50%',
+                    background: 'var(--blue-9)'
+                  }}
+                >
+                  <ChevronRightIcon width="24" height="24" />
+                </Button>
+              </Flex>
+
+              {/* Нижняя кнопка (вниз) */}
+              <Flex justify="center">
+                <Button 
+                  onClick={playerDrop}
+                  disabled={gameOver || isPaused || !gameStarted}
+                  style={{
+                    width: '60px',
+                    height: '60px',
+                    borderRadius: '50%',
+                    background: 'var(--blue-9)'
+                  }}
+                >
+                  <ChevronDownIcon width="24" height="24" />
+                </Button>
+              </Flex>
+            </Card>
+
+            {/* Инструкции */}
+            <Card style={{ 
+              padding: '10px',
+              background: 'var(--gray-3)',
+              borderRadius: '8px',
+              opacity: !gameStarted || isPaused || gameOver ? 0.5 : 1
+            }}>
+              <Text size="2" mb="2" weight="bold">Управление:</Text>
+              <Text size="2">↑ Поворот фигуры</Text>
+              <Text size="2">← → Движение</Text>
+              <Text size="2">↓ Ускорить падение</Text>
+              <Text size="2">Пробел: Пауза</Text>
+            </Card>
           </Flex>
-          <Button 
-            size="3" 
-            onClick={() => {
-              if (isPaused || gameOver) return;
-              while (!collide(arena.current, piece.current)) {
-                piece.current.pos.y++;
-              }
-              piece.current.pos.y--;
-              merge(arena.current, piece.current);
-              playerReset();
-              arenaSweep();
-              dropCounter.current = 0;
-              draw();
-            }} 
-            variant="soft"
-            style={{ width: '180px', height: '40px' }}
-          >
-            Сброс
-          </Button>
         </Flex>
-
-        {gameOver && (
-          <Text size="6" color="red" weight="bold">Игра окончена!</Text>
-        )}
-        {isPaused && !gameOver && (
-          <Text size="4">Нажмите Play чтобы начать</Text>
-        )}
-        <Box>
-          <Text size="3" weight="medium">Управление:</Text>
-          <Text size="2">← → : Движение влево/вправо</Text>
-          <Text size="2">↑ : Поворот</Text>
-          <Text size="2">↓ : Ускорить падение</Text>
-          <Text size="2">Пробел : Мгновенное падение</Text>
-          <Text size="2">Свайп: Управление на мобильных устройствах</Text>
-        </Box>
       </Flex>
     </Card>
   );

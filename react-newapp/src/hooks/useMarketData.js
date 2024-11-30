@@ -1,102 +1,147 @@
 import { useState, useEffect } from 'react';
 
-const COIN_IDS = {
-  BTC: 'bitcoin',
-  ETH: 'ethereum',
-  TON: 'the-open-network',
-  SOL: 'solana',
-  ADA: 'cardano',
-  LINK: 'chainlink'
+// Конфигурация для криптовалют
+const CRYPTO_CONFIG = {
+  BTC: { id: 'bitcoin', name: 'Bitcoin', position: 1 },
+  ETH: { id: 'ethereum', name: 'Ethereum', position: 2 },
+  TON: { id: 'the-open-network', name: 'TON', position: 3 },
+  SOL: { id: 'solana', name: 'Solana', position: 4 },
+  ADA: { id: 'cardano', name: 'Cardano', position: 5 },
+  LINK: { id: 'chainlink', name: 'Chainlink', position: 6 },
+  XRP: { id: 'ripple', name: 'Ripple', position: 7 },
+  DOT: { id: 'polkadot', name: 'Polkadot', position: 8 },
+  DOGE: { id: 'dogecoin', name: 'Dogecoin', position: 9 },
+  AVAX: { id: 'avalanche-2', name: 'Avalanche', position: 10 },
+  MATIC: { id: 'matic-network', name: 'Polygon', position: 11 },
+  UNI: { id: 'uniswap', name: 'Uniswap', position: 12 }
 };
 
-const CURRENCY_SYMBOLS = ['USD', 'EUR', 'RUB', 'CNY', 'GBP', 'JPY'];
+// Конфигурация для валют
+const CURRENCY_CONFIG = {
+  USD: { name: 'US Dollar', position: 1 },
+  EUR: { name: 'Euro', position: 2 },
+  RUB: { name: 'Russian Ruble', position: 3 },
+  CNY: { name: 'Chinese Yuan', position: 4 },
+  GBP: { name: 'British Pound', position: 5 },
+  JPY: { name: 'Japanese Yen', position: 6 },
+  CHF: { name: 'Swiss Franc', position: 7 },
+  TRY: { name: 'Turkish Lira', position: 8 },
+  AED: { name: 'UAE Dirham', position: 9 },
+  SGD: { name: 'Singapore Dollar', position: 10 },
+  KRW: { name: 'South Korean Won', position: 11 },
+  INR: { name: 'Indian Rupee', position: 12 }
+};
 
-export const useMarketData = (type = 'currency') => {
-  const [data, setData] = useState(null);
+export const useMarketData = (type) => {
+  const [marketData, setMarketData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     let isMounted = true;
+    let timeoutId;
 
-    const fetchCryptoData = async (coinId) => {
-      const response = await fetch(
-        `https://api.coingecko.com/api/v3/simple/price?ids=${coinId}&vs_currencies=usd&include_24h_change=true`
-      );
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch crypto data for ${type}`);
+    const fetchCryptoData = async () => {
+      if (!CRYPTO_CONFIG[type]) {
+        throw new Error('Invalid cryptocurrency type');
       }
 
-      const result = await response.json();
-      
-      if (!result[coinId]) {
-        throw new Error(`Invalid crypto data received for ${type}`);
-      }
+      try {
+        const coinId = CRYPTO_CONFIG[type].id;
+        // Using CoinGecko API v3
+        const response = await fetch(
+          `https://api.coingecko.com/api/v3/simple/price?ids=${coinId}&vs_currencies=usd,kzt&include_24h_change=true`,
+          {
+            headers: {
+              'Accept': 'application/json',
+              'Cache-Control': 'no-cache'
+            }
+          }
+        );
 
-      const coinData = result[coinId];
-      return {
-        price: parseFloat(coinData.usd) || 0,
-        change: parseFloat(coinData.usd_24h_change) || 0,
-        symbol: type
-      };
+        if (!response.ok) {
+          throw new Error(`Failed to fetch data for ${type}`);
+        }
+
+        const data = await response.json();
+        
+        if (!data[coinId]) {
+          throw new Error(`No data available for ${type}`);
+        }
+
+        return {
+          symbol: type,
+          name: CRYPTO_CONFIG[type].name,
+          position: CRYPTO_CONFIG[type].position,
+          price: {
+            usd: Number(data[coinId].usd),
+            kzt: Number(data[coinId].kzt || data[coinId].usd * 450)
+          },
+          change: Number(data[coinId].usd_24h_change?.toFixed(2)) || 0
+        };
+      } catch (error) {
+        console.error(`Error fetching ${type} data:`, error);
+        throw error;
+      }
     };
 
-    const fetchCurrencyData = async (currency) => {
-      // Используем API для получения курсов валют
-      const response = await fetch(
-        `https://open.er-api.com/v6/latest/KZT`
-      );
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch currency data for ${currency}`);
+    const fetchCurrencyData = async () => {
+      if (!CURRENCY_CONFIG[type]) {
+        throw new Error('Invalid currency type');
       }
 
-      const result = await response.json();
-      
-      if (!result.rates || !result.rates[currency]) {
-        throw new Error(`Invalid currency data received for ${currency}`);
-      }
+      try {
+        // Using Open Exchange Rates API
+        const response = await fetch('https://open.er-api.com/v6/latest/USD');
 
-      // Конвертируем курс из KZT в целевую валюту
-      const rate = 1 / result.rates[currency];
-      
-      return {
-        price: rate,
-        change: 0, // К сожалению, API не предоставляет изменение курса
-        symbol: currency
-      };
+        if (!response.ok) {
+          throw new Error(`Failed to fetch data for ${type}`);
+        }
+
+        const data = await response.json();
+        
+        if (!data.rates || !data.rates.KZT || !data.rates[type]) {
+          throw new Error(`No exchange rate data available for ${type}`);
+        }
+
+        // Calculate rates
+        const usdToKzt = data.rates.KZT;
+        const usdToCurrency = data.rates[type];
+        const kztToCurrency = usdToKzt / usdToCurrency;
+
+        return {
+          symbol: type,
+          name: CURRENCY_CONFIG[type].name,
+          position: CURRENCY_CONFIG[type].position,
+          price: {
+            kzt: Number(kztToCurrency.toFixed(2)),
+            usd: Number((1 / usdToCurrency).toFixed(2))
+          },
+          change: 0
+        };
+      } catch (error) {
+        console.error(`Error fetching ${type} data:`, error);
+        throw error;
+      }
     };
 
     const fetchData = async () => {
-      if (!isMounted) return;
-
       try {
         setLoading(true);
         setError(null);
 
-        let marketData;
-
-        if (COIN_IDS[type]) {
-          marketData = await fetchCryptoData(COIN_IDS[type]);
-        } else if (CURRENCY_SYMBOLS.includes(type)) {
-          marketData = await fetchCurrencyData(type);
-        } else {
-          throw new Error(`Unknown market data type: ${type}`);
-        }
+        const data = type in CRYPTO_CONFIG 
+          ? await fetchCryptoData()
+          : await fetchCurrencyData();
 
         if (isMounted) {
-          setData(marketData);
+          setMarketData(data);
+          setError(null);
         }
       } catch (err) {
-        console.error('Error fetching market data:', err);
         if (isMounted) {
           setError(err.message);
-          setData({
-            price: 0,
-            change: 0,
-            symbol: type
-          });
+          setMarketData(null);
         }
       } finally {
         if (isMounted) {
@@ -106,15 +151,22 @@ export const useMarketData = (type = 'currency') => {
     };
 
     fetchData();
-    const interval = setInterval(fetchData, 60000); // Обновляем каждую минуту
+    timeoutId = setInterval(fetchData, 60000);
 
     return () => {
       isMounted = false;
-      clearInterval(interval);
+      if (timeoutId) {
+        clearInterval(timeoutId);
+      }
     };
   }, [type]);
 
-  return { data, loading, error };
+  return {
+    data: marketData,
+    loading,
+    error,
+    isCrypto: type in CRYPTO_CONFIG
+  };
 };
 
 export default useMarketData;

@@ -1,132 +1,215 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, Text, Box, Flex, Grid, Badge, Dialog, Button } from '@radix-ui/themes';
 import { CubeIcon, ArrowUpIcon, ArrowDownIcon } from '@radix-ui/react-icons';
-import { useMarketData } from '../../hooks/useMarketData';
+import useMarketData from '../../hooks/useMarketData';
 
-const CryptoWidget = () => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [showAll, setShowAll] = useState(false);
+const formatPrice = (price, currency = 'USD') => {
+  if (!price || typeof price !== 'number' || isNaN(price)) {
+    return '0.00';
+  }
+  return new Intl.NumberFormat(currency === 'USD' ? 'en-US' : 'ru-RU', {
+    style: 'currency',
+    currency: currency,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(price);
+};
 
-  const { data: btcData, loading: btcLoading } = useMarketData('BTC');
-  const { data: ethData, loading: ethLoading } = useMarketData('ETH');
-  const { data: tonData, loading: tonLoading } = useMarketData('TON');
-  const { data: solData, loading: solLoading } = useMarketData('SOL');
-  const { data: adaData, loading: adaLoading } = useMarketData('ADA');
-  const { data: linkData, loading: linkLoading } = useMarketData('LINK');
-
-  const allCryptos = [
-    {
-      id: 1,
-      name: 'Bitcoin',
-      symbol: 'BTC',
-      data: btcData,
-      loading: btcLoading,
-      icon: 'https://cryptologos.cc/logos/bitcoin-btc-logo.png'
-    },
-    {
-      id: 2,
-      name: 'Ethereum',
-      symbol: 'ETH',
-      data: ethData,
-      loading: ethLoading,
-      icon: 'https://cryptologos.cc/logos/ethereum-eth-logo.png'
-    },
-    {
-      id: 3,
-      name: 'TON',
-      symbol: 'TON',
-      data: tonData,
-      loading: tonLoading,
-      icon: 'https://cryptologos.cc/logos/toncoin-ton-logo.png'
-    },
-    {
-      id: 4,
-      name: 'Solana',
-      symbol: 'SOL',
-      data: solData,
-      loading: solLoading,
-      icon: 'https://cryptologos.cc/logos/solana-sol-logo.png'
-    },
-    {
-      id: 5,
-      name: 'Cardano',
-      symbol: 'ADA',
-      data: adaData,
-      loading: adaLoading,
-      icon: 'https://cryptologos.cc/logos/cardano-ada-logo.png'
-    },
-    {
-      id: 6,
-      name: 'Chainlink',
-      symbol: 'LINK',
-      data: linkData,
-      loading: linkLoading,
-      icon: 'https://cryptologos.cc/logos/chainlink-link-logo.png'
-    }
-  ];
-
-  const displayedCryptos = showAll ? allCryptos : allCryptos.slice(0, 4);
-
-  const formatPrice = (price) => {
-    if (typeof price !== 'number' || isNaN(price)) return '$0.00';
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    }).format(price);
+const getCryptoIcon = (crypto) => {
+  const icons = {
+    BTC: '₿',
+    ETH: 'Ξ',
+    TON: '💎',
+    SOL: '◎',
+    ADA: '₳',
+    LINK: '⬡',
+    XRP: '✕',
+    DOT: '●',
+    DOGE: 'Ð',
+    AVAX: '🔺',
+    MATIC: '⬡',
+    UNI: '🦄'
   };
+  return icons[crypto] || '🪙';
+};
 
-  const getBadgeColor = (change) => {
-    if (!change || isNaN(change)) return 'gray';
-    return change >= 0 ? 'green' : 'red';
-  };
+const CryptoCard = ({ crypto, onClick, showKZT = false }) => {
+  const { data, loading, error } = useMarketData(crypto);
 
-  const renderCryptoItem = (crypto) => (
-    <Box key={crypto.id}>
+  if (loading) {
+    return (
       <Card 
         size="1" 
         style={{ 
-          height: '80px',
+          height: showKZT ? '100px' : '80px',
           padding: '8px',
           backgroundColor: 'var(--gray-1)',
           border: '1px solid var(--gray-4)',
           cursor: 'pointer'
         }}
-        onClick={() => setIsModalOpen(true)}
       >
-        <Flex direction="column" gap="1" justify="between" style={{ height: '100%' }}>
-          <Flex justify="between" align="center">
-            <Flex align="center" gap="1">
-              <img 
-                src={crypto.icon} 
-                alt={crypto.name}
-                style={{ width: '16px', height: '16px' }}
-              />
-              <Text size="2" weight="bold">{crypto.symbol}</Text>
-            </Flex>
-            <CubeIcon width="12" height="12" style={{ color: 'var(--gray-8)' }} />
-          </Flex>
+        <Text>Loading {crypto} data...</Text>
+      </Card>
+    );
+  }
 
-          {crypto.loading ? (
-            <Text size="2" style={{ color: 'var(--gray-9)' }}>Loading...</Text>
-          ) : (
-            <Flex direction="column" gap="1">
-              <Text size="2" weight="bold" style={{ color: 'var(--gray-12)' }}>
-                {formatPrice(crypto.data?.price)}
-              </Text>
-              <Badge size="1" color={getBadgeColor(crypto.data?.change)} variant="soft">
-                <Flex align="center" gap="1">
-                  {crypto.data?.change >= 0 ? <ArrowUpIcon /> : <ArrowDownIcon />}
-                  <Text size="1">{Math.abs(crypto.data?.change || 0).toFixed(2)}%</Text>
-                </Flex>
-              </Badge>
+  if (error) {
+    return (
+      <Card 
+        size="1" 
+        style={{ 
+          height: showKZT ? '100px' : '80px',
+          padding: '8px',
+          backgroundColor: 'var(--gray-1)',
+          border: '1px solid var(--gray-4)',
+          cursor: 'pointer'
+        }}
+      >
+        <Text color="red">Error: {error}</Text>
+      </Card>
+    );
+  }
+
+  if (!data) {
+    return (
+      <Card 
+        size="1" 
+        style={{ 
+          height: showKZT ? '100px' : '80px',
+          padding: '8px',
+          backgroundColor: 'var(--gray-1)',
+          border: '1px solid var(--gray-4)',
+          cursor: 'pointer'
+        }}
+      >
+        <Text>No data available for {crypto}</Text>
+      </Card>
+    );
+  }
+
+  return (
+    <Card 
+      size="1" 
+      style={{ 
+        height: showKZT ? '100px' : '80px',
+        padding: '8px',
+        backgroundColor: 'var(--gray-1)',
+        border: '1px solid var(--gray-4)',
+        cursor: 'pointer'
+      }}
+      onClick={onClick}
+    >
+      <Flex direction="column" gap="1" justify="between" style={{ height: '100%' }}>
+        <Flex justify="between" align="center">
+          <Flex align="center" gap="1">
+            <Text style={{ fontSize: '14px' }}>{getCryptoIcon(crypto)}</Text>
+            <Text size="2" weight="bold">{crypto}</Text>
+          </Flex>
+          <Badge size="1" color={data.change >= 0 ? 'green' : 'red'} variant="soft">
+            <Flex align="center" gap="1">
+              {data.change >= 0 ? <ArrowUpIcon /> : <ArrowDownIcon />}
+              <Text size="1">{Math.abs(data.change).toFixed(2)}%</Text>
             </Flex>
+          </Badge>
+        </Flex>
+
+        <Flex direction="column" gap="1">
+          <Text size="2" weight="bold" style={{ color: 'var(--gray-12)' }}>
+            {formatPrice(data.price.usd, 'USD')}
+          </Text>
+          {showKZT && (
+            <Text size="2" style={{ color: 'var(--gray-11)' }}>
+              ≈ {new Intl.NumberFormat('ru-RU').format(data.price.kzt)} ₸
+            </Text>
           )}
         </Flex>
-      </Card>
-    </Box>
+      </Flex>
+    </Card>
   );
+};
+
+const ModalCryptoItem = ({ crypto }) => {
+  const { data, loading, error } = useMarketData(crypto);
+
+  if (loading) {
+    return (
+      <Card 
+        size="1"
+        style={{ 
+          padding: '12px',
+          backgroundColor: 'var(--gray-1)',
+          border: '1px solid var(--gray-4)'
+        }}
+      >
+        <Text>Loading {crypto} data...</Text>
+      </Card>
+    );
+  }
+
+  if (error || !data) {
+    return (
+      <Card 
+        size="1"
+        style={{ 
+          padding: '12px',
+          backgroundColor: 'var(--gray-1)',
+          border: '1px solid var(--gray-4)'
+        }}
+      >
+        <Text color="red">Error loading {crypto} data</Text>
+      </Card>
+    );
+  }
+
+  return (
+    <Card 
+      key={crypto}
+      size="1"
+      style={{ 
+        padding: '12px',
+        backgroundColor: 'var(--gray-1)',
+        border: '1px solid var(--gray-4)'
+      }}
+    >
+      <Flex justify="between" align="center">
+        <Flex align="center" gap="2">
+          <Text style={{ fontSize: '20px' }}>{getCryptoIcon(crypto)}</Text>
+          <Box>
+            <Text size="2" weight="bold">{crypto}</Text>
+            <Text size="2" color="gray">{data.name || crypto}</Text>
+          </Box>
+        </Flex>
+        <Flex direction="column" align="end">
+          <Text size="2" weight="bold">
+            {formatPrice(data.price, 'USD')}
+          </Text>
+          <Text size="2" color="gray">
+            ≈ {new Intl.NumberFormat('ru-RU').format(data.price_kzt)} ₸
+          </Text>
+        </Flex>
+      </Flex>
+    </Card>
+  );
+};
+
+const ModalCryptoList = ({ cryptos }) => {
+  return (
+    <Grid columns="1" gap="2" width="auto">
+      {cryptos.map((crypto) => (
+        <ModalCryptoItem key={crypto} crypto={crypto} />
+      ))}
+    </Grid>
+  );
+};
+
+const CryptoWidget = () => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showAll, setShowAll] = useState(false);
+  const cryptos = [
+    'BTC', 'ETH', 'TON', 'SOL', 'ADA', 'LINK',
+    'XRP', 'DOT', 'DOGE', 'AVAX', 'MATIC', 'UNI'
+  ];
+  const displayedCryptos = showAll ? cryptos : cryptos.slice(0, 4);
 
   return (
     <>
@@ -154,53 +237,29 @@ const CryptoWidget = () => {
           </Flex>
 
           <Grid columns="2" gap="2" width="auto">
-            {displayedCryptos.map(renderCryptoItem)}
+            {displayedCryptos.map((crypto) => (
+              <CryptoCard 
+                key={crypto} 
+                crypto={crypto} 
+                onClick={() => setIsModalOpen(true)}
+              />
+            ))}
           </Grid>
         </Flex>
       </Card>
 
       <Dialog.Root open={isModalOpen} onOpenChange={setIsModalOpen}>
         <Dialog.Content style={{ maxWidth: 450 }}>
-          <Dialog.Title>Cryptocurrency Market</Dialog.Title>
+          <Dialog.Title>
+            <Flex align="center" gap="2">
+              <CubeIcon width="20" height="20" />
+              <Text size="5" weight="bold">Crypto Market</Text>
+            </Flex>
+          </Dialog.Title>
           
-          <Flex direction="column" gap="3" style={{ marginTop: 20 }}>
-            {allCryptos.map((crypto) => (
-              <Box key={crypto.id}>
-                <Flex justify="between" align="center" style={{ padding: '8px 0' }}>
-                  <Flex align="center" gap="2">
-                    <img 
-                      src={crypto.icon} 
-                      alt={crypto.name} 
-                      style={{ width: '24px', height: '24px' }} 
-                    />
-                    <Box>
-                      <Text weight="bold">{crypto.symbol}</Text>
-                      <Text color="gray" size="2">{crypto.name}</Text>
-                    </Box>
-                  </Flex>
-                  
-                  <Flex direction="column" align="end" gap="1">
-                    {crypto.loading ? (
-                      <Text size="2">Loading...</Text>
-                    ) : (
-                      <>
-                        <Text size="2" weight="bold">
-                          {formatPrice(crypto.data?.price)}
-                        </Text>
-                        <Badge size="1" color={getBadgeColor(crypto.data?.change)} variant="soft">
-                          <Flex align="center" gap="1">
-                            {crypto.data?.change >= 0 ? <ArrowUpIcon /> : <ArrowDownIcon />}
-                            <Text size="1">{Math.abs(crypto.data?.change || 0).toFixed(2)}%</Text>
-                          </Flex>
-                        </Badge>
-                      </>
-                    )}
-                  </Flex>
-                </Flex>
-                <Box style={{ borderBottom: '1px solid var(--gray-4)' }} />
-              </Box>
-            ))}
-          </Flex>
+          <Box style={{ marginTop: 20 }}>
+            <ModalCryptoList cryptos={cryptos} />
+          </Box>
 
           <Flex gap="3" mt="4" justify="end">
             <Dialog.Close>
